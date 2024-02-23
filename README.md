@@ -59,6 +59,7 @@ Next steps include:
 * Make your bot do what you want by editing code locally, and `--run` it again with each modification.
 * Keep making commits to the cloud. You do not need to increment the version number each time inside `runtime.json`.
 * Publish the bot with the `--publish` command. This technically puts it through a review process like the Apple App Store. In reality, since we're not the Apple App Store yet, you can just let us know when you are ready to publish a bot by emailing dmoss@caredaily.ai or destry@caredaily.ai. Once published, other users can purchase the bot with the `--purchase` command.
+* Add your bot to existing organizations using the `--add_organization` command.  Your bot is private to you until an organization administrator approves it for locations within their organization.  Sign up at app.caredaily.ai/signup today to learn more!
 
 ## Notes on architecture
 

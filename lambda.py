@@ -208,7 +208,7 @@ class LambdaLogger():
         if botengine.is_server_version_newer_than(1, 38):
             response['startCode'] = self.start_code
             response["logEvents"] = self.log_events
-            if bot is not None:
+            if bot is not None and hasattr(bot, 'get_intelligence_statistics'):
                 response['microservices'] = bot.get_intelligence_statistics(botengine)
             response['startTime'] = self.start_time_ms
             response['endTime'] = int(time.time() * 1000)

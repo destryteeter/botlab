@@ -264,9 +264,7 @@ USAGE
         developer_group.add_argument("--errors", dest="errors_bundle_id", nargs='+', help="Get the errors from your given bot bundle executing on the cloud across all users")
         developer_group.add_argument("--logs", dest="logs_bundle_id", nargs='+', help="Get the logs from your given bot bundle executing on the cloud across all users")
         developer_group.add_argument("--reject_bot_under_review", dest="reject_bundle_id", help="Reject the given bot from being reviewed or published publicly. Used after you --publish and need to make changes.")
-        developer_group.add_argument("--add_organization", dest="bundle_for_organization", help="Allow the given Bundle ID to be purchased by the given --organization")
-        developer_group.add_argument("--remove_organization", dest="remove_organization", help="Bundle ID to prevent from being purchased by the --organization")
-        developer_group.add_argument("--organization_development_mode", dest="organization_development_mode", action="store_true", help="Allow the organization to use the bot in developer mode instead of only purchasing publicly available bots. This is always used in conjunction with --add_organization")
+        
         developer_group.add_argument("--add_team_member", dest="add_team_member", action="store_true", help="Add a new member to the team.")
         developer_group.add_argument("--delete_team_member", dest="delete_team_member", action="store_true", help="Delete a member of the team.")
         developer_group.add_argument("--get_team_members", dest="get_team_members", action="store_true", help="View members of the team.")
@@ -287,8 +285,6 @@ USAGE
         run_group.add_argument("--https_proxy", dest="https_proxy", help="If your corporate network requires a proxy, type in the full HTTPS proxy address here (i.e. http://10.10.1.10:1080)")
 
         appstore_group = parser.add_argument_group(Color.BOLD + "BOT SHOP - Browse the Bot Shop and manage purchased bots." + Color.END)
-        appstore_group.add_argument("--search", dest="search", action="store_true", help="Search the bot store for all available bots")
-        appstore_group.add_argument("--searchfor", dest="search_criteria", help="Search the bot store for bots matching the given search criteria")
         appstore_group.add_argument("--lookat", dest="view_bundle_id", help="View the details of an bot on the bot store")
         appstore_group.add_argument("--purchase", dest="purchase_bundle_id", help="Obtain or purchase access to an bot on the bot store")
         appstore_group.add_argument("--configure", dest="configure_bot_instance_id", help="Grant permission for an bot instance to access devices and communications")
@@ -300,7 +296,7 @@ USAGE
         appstore_group.add_argument("--questions", dest="questions_bot_instance_id", help="Answer questions asked by the given bot instance ID or bundle ID")
 
         optional_group = parser.add_argument_group(Color.BOLD + "Optional Arguments" + Color.END)
-        optional_group.add_argument("-o", "--organization_id", dest="organization_id", help="Add in the organization ID we're talking about, used in conjunction with --purchase, --add_organization, --remove_organization")
+        optional_group.add_argument("-o", "--organization_id", dest="organization_id", help="Add in the organization ID we're talking about, used in conjunction with --purchase, --add_organization, --approve_organization, --remove_organization, and --get_organizations")
         optional_group.add_argument("-h", "--help", dest="help", action="store_true", help="Show this help message and exit")
         optional_group.add_argument("-u", "--username", dest="username", help="Username")
         optional_group.add_argument("-st", "--save-states", dest="save_states", help="Location ID for set states after playback locally")
@@ -340,6 +336,33 @@ USAGE
 
         # Subparsers
         subparsers = parser.add_subparsers(dest="actions")
+
+        # 'bot_organizations' parser
+        bot_organizations_parser = subparsers.add_parser("bot_organizations")
+
+        add_organization_group = bot_organizations_parser.add_argument_group(Color.BOLD + "Add Organization" + Color.END)
+        add_organization_group.add_argument('--add_organization', dest="add_bot_organization", help="Allow the given Bundle ID to be purchased by the given --organization")
+
+        approve_organization_group = bot_organizations_parser.add_argument_group(Color.BOLD + "Approve Organization" + Color.END)
+        approve_organization_group.add_argument('--approve_organization', dest="approve_bot_organization", help="Approve the given Bundle ID for the given --organization")
+        approve_organization_group.add_argument('-s', '--status', dest="bot_organization_status", help="Status of the bot.  1 to approve, 2 to reject.")
+        approve_organization_group.add_argument("-d', '--development", dest="bot_organization_development", action="store_true", help="This bot is for testing and development purposes. Default is 'false'.")
+
+        remove_organization_group = bot_organizations_parser.add_argument_group(Color.BOLD + "Remove Organization" + Color.END)
+        remove_organization_group.add_argument('--remove_organization', dest="remove_bot_organization", help="Bundle ID to prevent from being purchased by the --organization")
+
+        get_organizations_group = bot_organizations_parser.add_argument_group(Color.BOLD + "Get Organizations" + Color.END)
+        get_organizations_group.add_argument('--get_organizations', dest="get_bot_organizations", help="Get a list of the organizations you have access to")
+
+        # 'bot_shop_search' parser
+        bot_shop_search_parser = subparsers.add_parser("bot_shop_search")
+        bot_shop_search_parser.add_argument("--search_by", dest="bot_shop_search_search_by", help="Search in name, author, keywords, bundle. Use * for a wildcard.")
+        bot_shop_search_parser.add_argument("--categories", dest="bot_shop_search_categories", nargs="+", help="Category search. i.e. 'S', 'E', etc. Multiple values are allowed and OR-ed.")
+        bot_shop_search_parser.add_argument("--compatible", dest="bot_shop_search_compatible", help="Filter by bots that are compatible with our user account or not, leave blank to return all bots")
+        bot_shop_search_parser.add_argument("--lang", dest="bot_shop_search_lang", help="Language filter, leave blank to return bots in all languages")
+        bot_shop_search_parser.add_argument("--core", dest="bot_shop_search_core", help="Filter by core class")
+        bot_shop_search_parser.add_argument("--object_names", dest="bot_shop_search_object_names", nargs="+", help="Show objects with such name(s). Multiple values are allowed.")
+        bot_shop_search_parser.add_argument("--limit", dest="bot_shop_search_limit", help="Limit the response size")
 
         # 'distribution' parser
         distribution_parser = subparsers.add_parser("distribution")
@@ -420,8 +443,6 @@ USAGE
         forever = args.json is None
         download_device_id = args.download_device_id
         download_device_type = args.download_device_type
-        search_criteria = args.search_criteria
-        search = args.search or (search_criteria is not None)
         appstore_view_bundle_id = args.view_bundle_id
         my_purchased_bots = args.my_purchased_bots
         delete_bot_instance_id = args.delete_bot_instance_id
@@ -430,9 +451,6 @@ USAGE
         pause_bot_instance_id = args.pause_bot_instance_id
         play_bot_instance_id = args.play_bot_instance_id
         organization_id = args.organization_id
-        organization_development_mode = args.organization_development_mode
-        add_organization = args.bundle_for_organization
-        remove_organization = args.remove_organization
         permissions_bot_instance_id = args.permissions_bot_instance_id
         devicetypes = args.device_types
         parameter = args.parameter
@@ -937,31 +955,6 @@ USAGE
                 #     print("\n\n")
                 #===================================================================
 
-            return 0
-
-        if search:
-            # Search the bot store
-            if user_key is None:
-                user_key = _login(server, username, password)
-
-            search_results = _botstore_search(server, user_key, searchBy=search_criteria)
-
-            for bot in search_results:
-                if bot["compatible"]:
-                    compatibility = Color.GREEN + "(Compatible)" + Color.END
-                else:
-                    compatibility = Color.RED + "(Incompatible)" + Color.END
-
-                print(Color.BOLD + "+ " + bot["name"] + " - by " + bot["author"] + " " + compatibility + Color.END)
-
-                print("\t" + Color.UNDERLINE + bot["bundle"] + Color.END)
-
-                try:
-                    print("\t" + bot["description"].replace("\n","\n\t\t"))
-                except:
-                    pass
-
-                print("\n")
             return 0
 
         if appstore_view_bundle_id:
@@ -2233,44 +2226,6 @@ USAGE
             print(the_bot() + "Developer rejected!")
             return 0
 
-        if add_organization:
-            if user_key is None:
-                user_key = _login(server, username, password)
-
-            if organization_id is None:
-                sys.stderr.write("Supply the ID of the organization with --organization\n\n")
-                return 2
-
-            try:
-                _allow_organization_to_purchase_bot(server, user_key, add_organization, organization_id, organization_development_mode)
-
-            except BotError as e:
-                sys.stderr.write("BotEngine Error: " + e.msg)
-                sys.stderr.write("\n\n")
-                return 2
-
-            print(the_bot() + "Done!")
-            return 0
-
-        if remove_organization:
-            if user_key is None:
-                user_key = _login(server, username, password)
-
-            if organization_id is None:
-                sys.stderr.write("Supply the ID of the organization with --organization\n\n")
-                return 2
-
-            try:
-                _prevent_organization_from_purchasing_bot(server, user_key, add_organization, organization_id)
-
-            except BotError as e:
-                sys.stderr.write("BotEngine Error: " + e.msg)
-                sys.stderr.write("\n\n")
-                return 2
-
-            print(the_bot() + "Done!")
-            return 0
-
         if download_device_id or download_device_type:
             #===================================================================
             # try:
@@ -3394,6 +3349,103 @@ USAGE
 
             print(Color.BOLD + "Generated bot: {}".format(temporary_bot_directory) + Color.END)
             print("\n" + the_bot() + "Done!")
+            return 0
+        
+        if args.actions == "bot_organizations":
+            if args.add_bot_organization:
+                try:
+                    if args.organization_id is None:
+                        raise BotError("Missing the organization ID.", -1)
+                except Exception as e:
+                    _bot_loggers["botengine"].error(e)
+                    return 0
+
+            
+                if user_key is None:
+                    user_key = _login(server, username, password)
+
+                _add_bot_to_organization(server, user_key, args.add_bot_organization, args.organization_id)
+                _bot_loggers["botengine"].info("Bot {} added to organization {}.".format(args.add_bot_organization, args.organization_id))
+            
+            if args.approve_bot_organization:
+                try:
+                    if args.organization_id is None:
+                        raise BotError("Missing the organization ID.", -1)
+                    if args.bot_organization_status is None:
+                        raise BotError("Missing the status.", -1)
+                    if args.bot_organization_status not in ["1", "2"]:
+                        raise BotError("Invalid status.", -1)
+                except Exception as e:
+                    _bot_loggers["botengine"].error(e)
+                    return 0
+                
+            
+                if user_key is None:
+                    user_key = _login(server, admin_username, admin_password, admin=True)
+
+                _approve_bot_for_organization(server, user_key, args.approve_bot_organization, args.organization_id, args.bot_organization_status, args.bot_organization_development)
+                _bot_loggers["botengine"].info("Bot {} status set to {} in organization {}.".format(args.approve_bot_organization, args.bot_organization_status, args.organization_id))
+
+            if args.remove_bot_organization:
+                try:
+                    if args.organization_id is None:
+                        raise BotError("Missing the organization ID.", -1)
+                except Exception as e:
+                    _bot_loggers["botengine"].error(e)
+                    return 0
+                
+                if user_key is None:
+                    user_key = _login(server, username, password)
+
+                _remove_an_organization(server, user_key, args.remove_bot_organization, args.organization_id)
+                _bot_loggers["botengine"].info("Bot {} removed from organization {}.".format(args.remove_bot_organization, args.organization_id))
+            
+            if args.get_bot_organizations:
+                if user_key is None:
+                    user_key = _login(server, username, password)
+                bot_organizations = _get_organizations(server, user_key, args.get_bot_organizations)
+                organizations = bot_organizations.get("organizations", [])
+                if len(organizations) == 0:
+                    print("No organizations found.")
+                for organization in organizations:
+                    if organization.get("development", True):
+                        development = Color.YELLOW + "Development" + Color.END
+                    else:
+                        development = Color.GREEN + "Public" + Color.END
+
+                    print(f"{Color.BOLD}{organization['name']}{Color.END} - {organization['id']} ({development})")
+                    
+                    print("\n")
+            return 0
+
+        if args.actions == "bot_shop_search":
+            if user_key is None:
+                if organization_id is not None:
+                    user_key = _login(server, admin_username, admin_password, admin=True)
+                else:
+                    user_key = _login(server, username, password)
+            
+            search = _botstore_search(server, user_key, args.bot_shop_search_search_by, args.bot_shop_search_categories, args.bot_shop_search_compatible, args.bot_shop_search_lang, args.bot_shop_search_core, location_id, organization_id, args.bot_shop_search_object_names, args.bot_shop_search_limit)
+            apps = search.get("apps", [])
+            if len(apps) == 0:
+                print("No bots found.")
+
+            for bot in apps:
+                if bot.get("compatible", True):
+                    compatibility = Color.GREEN + "(Compatible)" + Color.END
+                else:
+                    compatibility = Color.RED + "(Incompatible)" + Color.END
+
+                print(Color.BOLD + "+ " + bot["name"] + " - by " + bot["author"] + " " + compatibility + Color.END)
+
+                print("\t" + Color.UNDERLINE + bot["bundle"] + Color.END)
+
+                try:
+                    print("\t" + bot["description"].replace("\n","\n\t\t"))
+                except:
+                    pass
+
+                print("\n")
             return 0
 
         if args.actions == "logging":
@@ -4759,7 +4811,14 @@ def _get_team_members(server, key, team_name, bundle):
 
 
 def _get_apps(server, key, bundle=None):
-    """Get created bots"""
+    """
+    Get created bots
+    :param server: Server address
+    :param key: API key
+    :param bundle: Bundle ID
+    :return: List of bots
+    """
+    _bot_loggers["botengine"].debug(">_get_apps() bundle={}".format(bundle))
     import requests
     global _https_proxy
 
@@ -4770,6 +4829,7 @@ def _get_apps(server, key, bundle=None):
     r = requests.get(server + "/cloud/developer/apps", params=params, headers=http_headers, proxies=_https_proxy)
     j = json.loads(r.text)
     _check_for_errors(j)
+    _bot_loggers["botengine"].info("<_get_apps() response={}".format(j))
     return j
 
 def _upload_icon(server, key, bundle, filePath):
@@ -5506,36 +5566,43 @@ def _device_category_to_string(category_id):
     elif category_id < 28000:
         return "Water"
 
-def _botstore_search(server, user_key, searchBy=None, category=('E','S','C','L','H','W'), compatible=False, lang=None):
+def _botstore_search(server, user_key, search_by=None, categories=None, compatible=None, lang=None, core=None, location_id=None, organization_id=None, object_names=None, limit=None):
     """
-    Search the bot store for bots
+    Search bots by a location or an organization. The location must belong to some organization to purchase a bot.
+
     :param server: Server to use
     :param user_key: User's /cloud API key
-    :param searchBy: Optional string. Search for a name, author, or keywords
-    :param category: Optional tuple. Search by category, multiple are allowed, i.e. ('E','S','C','L','H','W')
-        E = Energy
-        S = Security
-        C = Care
-        L = Lifestyle
-        H = Health
-        W = Wellness
-    :param compatible: Optional boolean. True to only return bots that are compatible with this user's account
-    :param lang: Optional string. Search for bots in a particular language, i.e. "en", "zh", etc.
+    :param searchBy: Search in name, author, keywords, bundle. Use * for a wildcard.
+    :param categories: Category search. i.e. 'S', 'E', etc. Multiple values are allowed and OR-ed.
+    :param compatible: Filter by bots that are compatible with our user account or not, leave blank to return all bots
+    :param lang: Language filter, leave blank to return bots in all languages
+    :param core: Filter by core class
+    :param locationId: Return bots available for this location
+    :param organizationId: Return bots available for this organization
+    :param objectName: Show objects with such name(s). Multiple values are allowed.
+    :param limit: Limit the response size
     :returns: List of bots matching the search criteria in JSON format
     """
+    _bot_loggers["botengine"].debug(">_botstore_search() searchBy={}, categories={}, compatible={}, lang={}, core={}, locationId={}, organizationId={}, objectName={}, limit={}".format(search_by, categories, compatible, lang, core, location_id, organization_id, object_names, limit))
     params = {}
-
-    if searchBy:
-        params["searchBy"] = searchBy
-
-    if category:
-        params["category"] = category
-
+    if search_by:
+        params["searchBy"] = search_by
+    if categories:
+        params["category"] = categories
     if compatible:
         params["compatible"] = compatible
-
     if lang:
         params["lang"] = lang
+    if core:
+        params["core"] = core
+    if location_id:
+        params["locationId"] = location_id
+    if organization_id:
+        params["organizationId"] = organization_id
+    if object_names:
+        params["objectName"] = object_names
+    if limit:
+        params["limit"] = limit
 
     http_headers = {"API_KEY": user_key, "Content-Type": "application/json"}
     import requests
@@ -5544,7 +5611,8 @@ def _botstore_search(server, user_key, searchBy=None, category=('E','S','C','L',
     r = requests.get(server + "/cloud/appstore/search", params=params, headers=http_headers, proxies=_https_proxy)
     j = json.loads(r.text)
     _check_for_errors(j)
-    return j["apps"]
+    _bot_loggers["botengine"].debug("<_botstore_search() response={}".format(j))
+    return j
 
 def _botstore_botinfo(server, user_key, bundle, location_id=None, lang=None):
     """
@@ -5575,37 +5643,16 @@ def _botstore_botinfo(server, user_key, bundle, location_id=None, lang=None):
     _check_for_errors(j)
     return j["app"]
 
-def _allow_organization_to_purchase_bot(server, user_key, bundle, organization_id, development_mode=False):
+
+def _add_bot_to_organization(server, user_key, bundle, organization_id):
     """
-    Allow an organization to purchase a bot
+    A bot developer proposes to use a bot in specific organization.
+
     :param server: Server to use
     :param user_key: User's /cloud API key
     :param bundle: Bot bundle ID to obtain or purchase
     :param organization_id: Organization ID to allow to purchase the bot
-    :param development_mode: True to allow this organization to have the latest and greatest developer version of this bot, False to let the organization purchase only the publicly available version
-    :return: Purchased bot instance ID
-    """
-    params = {
-              "bundle" : bundle,
-              "developmentMode": development_mode
-              }
-
-    http_headers = {"API_KEY": user_key, "Content-Type": "application/json"}
-    import requests
-    global _https_proxy
-
-    r = requests.put(server + "/cloud/developer/organizations/" + str(organization_id), params=params, headers=http_headers, proxies=_https_proxy)
-    j = json.loads(r.text)
-    _check_for_errors(j)
-
-def _prevent_organization_from_purchasing_bot(server, user_key, bundle, organization_id):
-    """
-    Prevent an organization from purchasing a bot
-    :param server: Server to use
-    :param user_key: User's /cloud API key
-    :param bundle: Bot bundle ID to obtain or purchase
-    :param organization_id: Organization ID to allow to purchase the bot
-    :return: Purchased bot instance ID
+    :return:
     """
     params = {
               "bundle" : bundle
@@ -5615,9 +5662,81 @@ def _prevent_organization_from_purchasing_bot(server, user_key, bundle, organiza
     import requests
     global _https_proxy
 
-    r = requests.delete(server + "/cloud/developer/organizations/" + str(organization_id), params=params, headers=http_headers, proxies=_https_proxy)
+    r = requests.post(server + "/cloud/appstore/organizations/" + str(organization_id), params=params, headers=http_headers, proxies=_https_proxy)
     j = json.loads(r.text)
     _check_for_errors(j)
+
+def _approve_bot_for_organization(server, user_key, bundle, organization_id, status, development=False):
+    """
+    Approve Bot for Organization
+
+    :param server: Server to use
+    :param user_key: User's /cloud API key
+    :param bundle: Bot bundle ID to obtain or purchase
+    :param organization_id: Organization ID to allow to purchase the bot
+    :param status: 1=approve; 2=reject
+    :param development: Is for testing purposes
+    :return:
+    """
+    params = {
+        "bundle" : bundle,
+        "status" : status,
+        "development" : development,
+    }
+
+    http_headers = {"API_KEY": user_key, "Content-Type": "application/json"}
+    import requests
+    global _https_proxy
+
+    r = requests.put(server + "/cloud/appstore/organizations/" + str(organization_id), params=params, headers=http_headers, proxies=_https_proxy)
+    j = json.loads(r.text)
+    _check_for_errors(j)
+
+def _remove_an_organization(server, user_key, bundle, organization_id):
+    """
+    Remove a bot from an organization
+
+    :param server: Server to use
+    :param user_key: User's /cloud API key
+    :param bundle: Bot bundle ID to obtain or purchase
+    :param organization_id: Organization ID to allow to purchase the bot
+    :return:
+    """
+    params = {
+        "bundle" : bundle
+    }
+
+    http_headers = {"API_KEY": user_key, "Content-Type": "application/json"}
+    import requests
+    global _https_proxy
+
+    r = requests.delete(server + "/cloud/appstore/organizations/" + str(organization_id), params=params, headers=http_headers, proxies=_https_proxy)
+    j = json.loads(r.text)
+    _check_for_errors(j)
+
+def _get_organizations(server, user_key, bundle):
+    """
+    This API returns all organizations associated with the bot.
+
+    :param server: Server to use
+    :param user_key: User's /cloud API key
+    :param bundle: Bot bundle ID to obtain or purchase
+    :return: List of organizations
+    """
+    _bot_loggers["botengine"].debug(">_get_organizations() bundle={}".format(bundle))
+    params = {
+        "bundle" : bundle
+    }
+
+    http_headers = {"API_KEY": user_key, "Content-Type": "application/json"}
+    import requests
+    global _https_proxy
+
+    r = requests.get(server + "/cloud/appstore/organizations", params=params, headers=http_headers, proxies=_https_proxy)
+    j = json.loads(r.text)
+    _check_for_errors(j)
+    _bot_loggers["botengine"].debug("<_get_organizations() response={}".format(j))
+    return j
 
 def _botstore_purchasebot(server, user_key, bundle, location_id=None, organization_id=None):
     """Delete an bot instance you previously purchased
@@ -6765,7 +6884,7 @@ def _run_locally_forever(bot_server, device_server, user_key, bot, bot_instance_
                         _botengine = _run(bot, inputs, _bot_loggers["botengine"], server_override=bot_server, local=True, local_execution_count=local_execution_count)
                         local_execution_count += 1
                         import json
-                        _bot_loggers["botengine"].debug("BotEngine Statistics: " + json.dumps(bot.get_intelligence_statistics(_botengine), indent=2, sort_keys=True))
+                        _bot_loggers["botengine"].debug("BotEngine Statistics: " + json.dumps(bot.get_intelligence_statistics(_botengine), indent=2, sort_keys=True) if hasattr(bot, "get_intelligence_statistics") else {})
 
                     except Exception as e:
                         print("Bot Exception: \n", e)
@@ -6966,7 +7085,7 @@ def _run(bot, inputs, logger, context=None, server_override=None, botengine_over
     botengine.flush_rules()
     botengine.flush_tags()
     botengine.flush_asynchronous_requests()
-    botengine.get_logger(f"{'botengine'}").debug("BotEngine Execution Complete: {}".format(bot.get_intelligence_statistics(botengine)))
+    botengine.get_logger(f"{'botengine'}").debug("BotEngine Execution Complete: {}".format(bot.get_intelligence_statistics(botengine) if hasattr(bot, "get_intelligence_statistics") else {}))
     return botengine
 
 
@@ -12383,6 +12502,7 @@ class Color:
     RED = Fore.RED
     BOLD = Style.BRIGHT
     END = Style.RESET_ALL
+    UNDERLINE = '\033[4m'
 
 
 
